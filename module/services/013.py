@@ -1,14 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import sys
 import platform
 import json
 import os
-import datetime
 import psutil
-import subprocess
-from threading import Thread
+import paramiko
+import threading
+import time
+from datetime import datetime
+from typing import Union, Dict, List, Any
 
 # 全局常量定义
 isPY2 = sys.version_info[0] == 2
@@ -16,85 +15,53 @@ isPY3 = sys.version_info[0] == 3
 isWindows = platform.system().lower() == 'windows'
 isLinux = platform.system().lower() == 'linux'
 isMac = platform.system().lower() == 'darwin'
-isARM = platform.machine().lower().startswith('arm')
-isX86 = platform.machine().lower() in ['x86_64', 'amd64', 'i386', 'i686']
+isARM = platform.machine().startswith(('arm', 'aarch'))
+isX86 = platform.machine().lower() in ('x86_64', 'amd64', 'i386', 'i686')
 is64bit = platform.machine().endswith('64')
 is32bit = not is64bit
 
-# Edict类定义
 class Edict(dict):
+    """可以通过点号访问的字典对象"""
     def __init__(self, *args, **kwargs):
         super(Edict, self).__init__(*args, **kwargs)
         self.__dict__ = {}
         for k, v in dict(*args, **kwargs).items():
             if isinstance(v, dict):
-                self[k] = Edict(v)
+                self.__dict__[k] = Edict(v)
             else:
-                self[k] = v
+                self.__dict__[k] = v
 
     def __getattr__(self, name):
-        if name not in self:
-            self[name] = Edict()
-        return self[name]
+        if name not in self.__dict__:
+            self.__dict__[name] = Edict()
+        return self.__dict__[name]
 
     def __setattr__(self, name, value):
         if name == '__dict__':
             super(Edict, self).__setattr__(name, value)
         else:
+            if isinstance(value, dict) and not isinstance(value, Edict):
+                value = Edict(value)
+            self.__dict__[name] = value
             self[name] = value
 
     def __repr__(self):
-        return json.dumps(self, indent=2, ensure_ascii=False)
+        return json.dumps(self.__dict__, indent=2)
 
-# 路由总线类定义
-class Bus(Edict):
+class CommandBus:
+    """命令路由总线"""
     def __init__(self):
-        super(Bus, self).__init__()
-    
-    def register(self, path):
-        def decorator(func):
-            self.routes[path] = func
-            return func
-        return decorator
-    
-    def execute(self, path, *args, **kwargs):
-        # 查找精确匹配的路由
-        if path in self.routes:
-            return self.routes[path](*args, **kwargs)
-            
-        # 处理带参数的路由
-        for route in self.routes:
-            if self._match_route(route, path):
-                params = self._extract_params(route, path)
-                return self.routes[route](*params, *args, **kwargs)
-        raise ValueError(f"No route found for path: {path}")
-    
-    def _match_route(self, route_pattern, path):
-        pattern_parts = route_pattern.split('/')
-        path_parts = path.split('/')
-        
-        if len(pattern_parts) != len(path_parts):
-            return False
-            
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                continue
-            if p != pp:
-                return False
-        return True
-    
-    def _extract_params(self, route_pattern, path):
-        pattern_parts = route_pattern.split('/')
-        path_parts = path.split('/')
-        params = []
-        
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                params.append(pp)
-        return params
-    
-    def __call__(self, path, *args, **kwargs):
-        return self.execute(path, *args, **kwargs)
+        self._commands = {}
+
+    def register(self, name: str, handler: callable):
+        """注册命令"""
+        self._commands[name] = handler
+
+    def execute(self, name: str, *args, **kwargs):
+        """执行命令"""
+        if name not in self._commands:
+            raise KeyError(f"Command {name} not found")
+        return self._commands[name](*args, **kwargs)
 
 class File:
     """文件操作类"""
@@ -143,7 +110,7 @@ class File:
         self.copy(dst_path)
         self.delete()
 
-class Folder:
+class Directory:
     """目录操作类"""
     def __init__(self, path: str, ssh_client=None):
         self.path = path
@@ -196,9 +163,9 @@ class FileSystem:
         """获取文件对象"""
         return File(path, self.ssh)
         
-    def dir(self, path: str) -> Folder:
+    def dir(self, path: str) -> Directory:
         """获取目录对象"""
-        return Folder(path, self.ssh)
+        return Directory(path, self.ssh)
 
 class CommandResult:
     """命令执行结果"""
@@ -216,60 +183,10 @@ class CommandResult:
 
 class Console:
     """控制台操作类"""
-    def __init__(self, ssh_client=None, log_dir=None, log_file=None):
+    def __init__(self, ssh_client=None):
         self.ssh = ssh_client
         self._stdout = None
         self._stderr = None
-        self.log_dir = log_dir
-        self.log_file = log_file
-        
-    @staticmethod
-    def _get_timestamp():
-        """获取当前时间戳"""
-        return datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-        
-    def log(self, message: str, level: str = 'info'):
-        """记录日志"""
-        timestamp = self._get_timestamp()
-        level = level.lower()
-        lines = message.split('\n')
-        
-        for line in lines:
-            log_line = f"{timestamp} [{level}] {line}\n"
-            # 打印到屏幕
-            print(log_line, end='')
-            
-            # 写入日志文件
-            if self.log_dir:
-                log_file = os.path.join(
-                    self.log_dir,
-                    datetime.datetime.now().strftime('%Y%m%d.log')
-                )
-                with open(log_file, 'a') as f:
-                    f.write(log_line)
-            elif self.log_file:
-                with open(self.log_file, 'a') as f:
-                    f.write(log_line)
-                    
-    def info(self, message: str, end='\n', flush=True):
-        """打印信息"""
-        print(message, end=end, flush=flush)
-        
-    def move_cursor_up(self, lines=1):
-        """向上移动光标"""
-        print(f"\033[{lines}A", end='')
-        
-    def move_cursor_down(self, lines=1):
-        """向下移动光标"""
-        print(f"\033[{lines}B", end='')
-        
-    def clear_line(self):
-        """清除当前行"""
-        print("\033[2K", end='')
-        
-    def clear_screen(self):
-        """清除屏幕"""
-        print("\033[2J", end='')
         
     def execute(self, command: str) -> CommandResult:
         """执行命令"""
@@ -477,70 +394,6 @@ class Processes:
         except FileNotFoundError:
             self.monitored_processes = {}
 
-class Device:
-    """设备对象"""
-    def __init__(self, name: str, ip: str, port: int):
-        self.name = name
-        self.ip = ip
-        self.port = port
-        self._socket = None
-        
-    def connect(self):
-        """连接设备"""
-        try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.connect((self.ip, self.port))
-            return True
-        except:
-            return False
-            
-    def disconnect(self):
-        """断开连接"""
-        if self._socket:
-            self._socket.close()
-            self._socket = None
-            
-    def read(self, size: int = 1024) -> bytes:
-        """读取数据"""
-        if not self._socket:
-            raise ConnectionError("Device not connected")
-        return self._socket.recv(size)
-        
-    def write(self, data: bytes):
-        """写入数据"""
-        if not self._socket:
-            raise ConnectionError("Device not connected")
-        self._socket.send(data)
-        
-    def __del__(self):
-        """析构函数"""
-        self.disconnect()
-
-class Devices:
-    """设备管理类"""
-    def __init__(self):
-        self._devices = {}
-        
-    def add_device(self, name: str, ip: str, port: int):
-        """添加设备"""
-        device = Device(name, ip, port)
-        self._devices[name] = device
-        return device
-        
-    def remove_device(self, name: str):
-        """移除设备"""
-        if name in self._devices:
-            self._devices[name].disconnect()
-            del self._devices[name]
-            
-    def get_device(self, name: str) -> Union[Device, None]:
-        """获取设备"""
-        return self._devices.get(name)
-        
-    def list_devices(self) -> List[Device]:
-        """列出所有设备"""
-        return list(self._devices.values())
-
 class _System:
     """系统对象组"""
     def __init__(self):
@@ -548,27 +401,8 @@ class _System:
         self.Console = Console()
         self.FileSystem = FileSystem()
         self.SystemInfo = SystemInfo()
-        self.Devices = Devices()
-        self.cmds = Bus()
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                continue
-            if p != pp:
-                return False
-        return True
-    
-    def _extract_params(self, route_pattern, path):
-        pattern_parts = route_pattern.split('/')
-        path_parts = path.split('/')
-        params = []
-        
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                params.append(pp)
-        return params
-    
-    def __call__(self, path, *args, **kwargs):
-        return self.execute(path, *args, **kwargs)
+        self.cmds = CommandBus()
+
 # 创建全局系统对象
 System = _System()
 

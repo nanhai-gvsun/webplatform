@@ -1,14 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import sys
 import platform
 import json
 import os
-import datetime
 import psutil
-import subprocess
-from threading import Thread
+import paramiko
+import threading
+import time
+from datetime import datetime
+from typing import Union, Dict, List, Any
+import datetime
+import socket
 
 # 全局常量定义
 isPY2 = sys.version_info[0] == 2
@@ -16,85 +17,53 @@ isPY3 = sys.version_info[0] == 3
 isWindows = platform.system().lower() == 'windows'
 isLinux = platform.system().lower() == 'linux'
 isMac = platform.system().lower() == 'darwin'
-isARM = platform.machine().lower().startswith('arm')
-isX86 = platform.machine().lower() in ['x86_64', 'amd64', 'i386', 'i686']
+isARM = platform.machine().startswith(('arm', 'aarch'))
+isX86 = platform.machine().lower() in ('x86_64', 'amd64', 'i386', 'i686')
 is64bit = platform.machine().endswith('64')
 is32bit = not is64bit
 
-# Edict类定义
 class Edict(dict):
+    """可以通过点号访问的字典对象"""
     def __init__(self, *args, **kwargs):
         super(Edict, self).__init__(*args, **kwargs)
         self.__dict__ = {}
         for k, v in dict(*args, **kwargs).items():
             if isinstance(v, dict):
-                self[k] = Edict(v)
+                self.__dict__[k] = Edict(v)
             else:
-                self[k] = v
+                self.__dict__[k] = v
 
     def __getattr__(self, name):
-        if name not in self:
-            self[name] = Edict()
-        return self[name]
+        if name not in self.__dict__:
+            self.__dict__[name] = Edict()
+        return self.__dict__[name]
 
     def __setattr__(self, name, value):
         if name == '__dict__':
             super(Edict, self).__setattr__(name, value)
         else:
+            if isinstance(value, dict) and not isinstance(value, Edict):
+                value = Edict(value)
+            self.__dict__[name] = value
             self[name] = value
 
     def __repr__(self):
-        return json.dumps(self, indent=2, ensure_ascii=False)
+        return json.dumps(self.__dict__, indent=2)
 
-# 路由总线类定义
-class Bus(Edict):
+class CommandBus:
+    """命令路由总线"""
     def __init__(self):
-        super(Bus, self).__init__()
-    
-    def register(self, path):
-        def decorator(func):
-            self.routes[path] = func
-            return func
-        return decorator
-    
-    def execute(self, path, *args, **kwargs):
-        # 查找精确匹配的路由
-        if path in self.routes:
-            return self.routes[path](*args, **kwargs)
-            
-        # 处理带参数的路由
-        for route in self.routes:
-            if self._match_route(route, path):
-                params = self._extract_params(route, path)
-                return self.routes[route](*params, *args, **kwargs)
-        raise ValueError(f"No route found for path: {path}")
-    
-    def _match_route(self, route_pattern, path):
-        pattern_parts = route_pattern.split('/')
-        path_parts = path.split('/')
-        
-        if len(pattern_parts) != len(path_parts):
-            return False
-            
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                continue
-            if p != pp:
-                return False
-        return True
-    
-    def _extract_params(self, route_pattern, path):
-        pattern_parts = route_pattern.split('/')
-        path_parts = path.split('/')
-        params = []
-        
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                params.append(pp)
-        return params
-    
-    def __call__(self, path, *args, **kwargs):
-        return self.execute(path, *args, **kwargs)
+        self._commands = {}
+
+    def register(self, name: str, handler: callable):
+        """注册命令"""
+        self._commands[name] = handler
+
+    def execute(self, name: str, *args, **kwargs):
+        """执行命令"""
+        if name not in self._commands:
+            raise KeyError(f"Command {name} not found")
+        return self._commands[name](*args, **kwargs)
 
 class File:
     """文件操作类"""
@@ -549,26 +518,8 @@ class _System:
         self.FileSystem = FileSystem()
         self.SystemInfo = SystemInfo()
         self.Devices = Devices()
-        self.cmds = Bus()
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                continue
-            if p != pp:
-                return False
-        return True
-    
-    def _extract_params(self, route_pattern, path):
-        pattern_parts = route_pattern.split('/')
-        path_parts = path.split('/')
-        params = []
-        
-        for p, pp in zip(pattern_parts, path_parts):
-            if p and p[0] == '{' and p[-1] == '}':
-                params.append(pp)
-        return params
-    
-    def __call__(self, path, *args, **kwargs):
-        return self.execute(path, *args, **kwargs)
+        self.cmds = CommandBus()
+
 # 创建全局系统对象
 System = _System()
 
