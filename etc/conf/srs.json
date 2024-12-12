@@ -1,0 +1,37 @@
+{
+    "listen": 1935,
+    "max_connections": 1000,
+    "daemon": false,
+    "http_api": {
+      "enabled": true,
+      "listen": 1985,
+      "crossdomain": true
+    },
+    "http_server": {
+      "enabled": true,
+      "listen": 8080,
+      "dir": "./objs/nginx/html"
+    },
+    "vhosts": {
+      "__defaultVhost__": {
+        "enabled": true,
+        "http_remux": {
+          "enabled": true,
+          "mount": "[vhost]/[app]/[stream].flv",
+          "hstrs": true
+        },
+        "hls": {
+          "enabled": true,
+          "hls_fragment": 10,
+          "hls_window": 60,
+          "hls_path": "./objs/nginx/html",
+          "hls_m3u8_file": "[app]/[stream].m3u8",
+          "hls_ts_file": "[app]/[stream]-[seq].ts"
+        },
+        "rtc": {
+          "enabled": true,
+          "bframe": false
+        }
+      }
+    }
+  }
