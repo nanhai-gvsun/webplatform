@@ -1,9 +1,11 @@
-# 项目文档
+## 说明
+这是一个教学项目，目的是通过整理需求，实现一个完整的web中间件平台。所有的需求记录保存在doc目录下。
 
 ## 目录结构
 ```bash
 .
 ├── cli/ # 外部命令行脚本
+├── docker/ # docker配置文件
 ├── doc/ # 文档目录
 │ ├── app.md # 后台服务的需求文档
 │ ├── services.md # 全局服务的需求文档
@@ -21,9 +23,14 @@
 ├── web/ # 前端目录
 ├── tests/ # 测试目录
 ├── .gitignore # Git忽略文件
+├── app.py # 项目主文件
+├── Dockerfile # docker镜像构建文件
+├── docker-compose.yml # docker-compose配置文件
 ├── package.json # 项目配置文件
-└── README.md # 项目说明文件
-
+├── requirements.txt # 项目依赖文件
+├── README.md # 项目说明文件
+├── start.sh # 项目启动脚本
+└── webplatform.service # 项目systemd服务文件
 ```
 ## 目录说明
 
