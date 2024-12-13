@@ -11,12 +11,12 @@ import subprocess
 from threading import Thread
 from abc import ABC, abstractmethod
 from typing import Union, Optional, List, Dict, Any
-# 使用 dataclasses 来简化一些类的定义
+# 2. 使用 dataclasses 来简化一些类的定义
 from dataclasses import dataclass
 
 # 定义模块版本信息
 # 版本号
-__version__ = '0.0.1'
+__version__ = '1.0.0'
 # 作者
 __author__ = '李品勇'
 # 邮箱
@@ -46,9 +46,6 @@ is32bit = not is64bit
 
 # Edict类定义
 class Edict(dict):
-    """
-    自定义字典类，支持通过属性访问字典项。
-    """
     def __init__(self, *args, **kwargs):
         super(Edict, self).__init__(*args, **kwargs)
         self.__dict__ = {}
@@ -59,32 +56,22 @@ class Edict(dict):
                 self[k] = v
 
     def __getattr__(self, name):
-        """
-        通过属性访问字典项。
-        """
         if name not in self:
             self[name] = Edict()
         return self[name]
 
     def __setattr__(self, name, value):
-        """
-        通过属性设置字典项。
-        """
         if name == '__dict__':
             super(Edict, self).__setattr__(name, value)
         else:
             self[name] = value
 
     def __repr__(self):
-        """
-        返回字典的 JSON 格式化表示。
-        """
         return json.dumps(self, indent=2, ensure_ascii=False)
-
-
+# 单例元类，确保每个类只有一个实例
 class SingletonMeta(type):
     """
-    单例元类，确保每个类只有一个实例。
+    单例元类，确保每个类只有一个实例
     """
     _instances = {}
 
@@ -103,43 +90,46 @@ class SingletonMeta(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
-
-
 # 路由总线类定义
 class Bus(Edict):
-    """
-    路由总线类，用于注册和执行路由。
+    """路由总线类，用于注册和执行路由处理函数
+    
+    主要功能:
+    1. 注册路由处理函数
+    2. 执行路由并传递参数
+    3. 支持带参数的动态路由匹配
     """
     def __init__(self):
         super(Bus, self).__init__()
-        self.routes = {}  # 存储路由和对应的处理函数
+        self.routes = {}  # 存储路由映射
     
-    def register(self, path):
-        """
-        注册路由的装饰器。
+    def register(self, path: str):
+        """注册路由处理函数的装饰器
         
-        参数:
-            path: 路由路径
-        
-        返回:
-            function: 装饰器函数
+        Args:
+            path: 路由路径，支持 {param} 形式的参数
+            
+        Returns:
+            decorator: 装饰器函数
         """
         def decorator(func):
             self.routes[path] = func
             return func
         return decorator
     
-    def execute(self, path, *args, **kwargs):
-        """
-        执行指定路由的处理函数。
+    def execute(self, path: str, *args, **kwargs):
+        """执行路由对应的处理函数
         
-        参数:
-            path: 路由路径
-            *args: 传递给处理函数的参数
+        Args:
+            path: 要执行的路由路径
+            *args: 传递给处理函数的位置参数
             **kwargs: 传递给处理函数的关键字参数
-        
-        返回:
+            
+        Returns:
             Any: 处理函数的返回值
+            
+        Raises:
+            ValueError: 当找不到匹配的路由时抛出
         """
         # 查找精确匹配的路由
         if path in self.routes:
@@ -150,19 +140,9 @@ class Bus(Edict):
             if self._match_route(route, path):
                 params = self._extract_params(route, path)
                 return self.routes[route](*params, *args, **kwargs)
-        raise ValueError(f"No route found for path: {path}")
+        raise ValueError(f"未找到路由: {path}")
     
     def _match_route(self, route_pattern, path):
-        """
-        匹配路由模式和实际路径。
-        
-        参数:
-            route_pattern: 路由模式
-            path: 实际路径
-        
-        返回:
-            bool: 是否匹配
-        """
         pattern_parts = route_pattern.split('/')
         path_parts = path.split('/')
         
@@ -177,16 +157,6 @@ class Bus(Edict):
         return True
     
     def _extract_params(self, route_pattern, path):
-        """
-        从路径中提取参数。
-        
-        参数:
-            route_pattern: 路由模式
-            path: 实际路径
-        
-        返回:
-            List: 提取的参数列表
-        """
         pattern_parts = route_pattern.split('/')
         path_parts = path.split('/')
         params = []
@@ -197,26 +167,42 @@ class Bus(Edict):
         return params
     
     def __call__(self, path, *args, **kwargs):
-        """
-        调用路由总线对象时，执行指定路由的处理函数。
-        """
         return self.execute(path, *args, **kwargs)
-
-
+# 文件操作类，支持本地和远程文件操作
 class File:
-    """文件操作类"""
-    def __init__(self, path: str, ssh_client=None):
+    """文件操作类，支持本地和远程文件操作
+    
+    主要功能:
+    1. 读写文件内容
+    2. 删除文件
+    3. 复制和移动文件
+    4. 支持SSH远程操作
+    """
+    def __init__(self, path: str, ssh_client: Optional[Any] = None):
         self.path = path
         self.ssh = ssh_client
         
     def read(self) -> str:
-        """读取文件内容"""
-        if self.ssh:
-            sftp = self.ssh.open_sftp()
-            with sftp.file(self.path, 'r') as f:
+        """读取文件内容
+        
+        Returns:
+            str: 文件内容
+            
+        Raises:
+            FileNotFoundError: 文件不存在时抛出
+            IOError: 读取失败时抛出
+        """
+        try:
+            if self.ssh:
+                sftp = self.ssh.open_sftp()
+                with sftp.file(self.path, 'r') as f:
+                    return f.read()
+            with open(self.path, 'r', encoding='utf-8') as f:
                 return f.read()
-        with open(self.path, 'r') as f:
-            return f.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"文件不存在: {self.path}")
+        except Exception as e:
+            raise IOError(f"读取文件失败: {str(e)}")
             
     def write(self, content: str):
         """写入文件内容"""
@@ -249,8 +235,7 @@ class File:
         """移动文件"""
         self.copy(dst_path)
         self.delete()
-
-
+# 目录操作类
 class Folder:
     """目录操作类"""
     def __init__(self, path: str, ssh_client=None):
@@ -290,8 +275,7 @@ class Folder:
             else:
                 sftp.remove(filepath)
         sftp.rmdir(path)
-
-
+# 文件系统操作类
 class FileSystem:
     """文件系统操作类"""
     def __init__(self, ssh_config: Dict = None):
@@ -309,7 +293,7 @@ class FileSystem:
         """获取目录对象"""
         return Folder(path, self.ssh)
 
-
+# 命令执行结果类
 @dataclass
 class CommandResult:
     """命令执行结果"""
@@ -323,8 +307,7 @@ class CommandResult:
 
     def __str__(self):
         return self.stdout if self.success else self.stderr
-
-
+# 控制台操作类
 class Console:
     """控制台操作类"""
     def __init__(self, ssh_client=None, log_dir=None, log_file=None):
@@ -418,16 +401,33 @@ class Console:
         """重置重定向"""
         self._stdout = None
         self._stderr = None
-
-
+# 系统信息获取类
 class SystemInfo:
-    """系统信息类"""
+    """系统信息获取类
+    
+    提供各种系统信息的获取方法，包括:
+    - CPU信息
+    - 内存信息
+    - 磁盘信息
+    - 网络信息
+    - 系统基本信息
+    """
     @staticmethod
-    def get_cpu_info() -> Dict:
+    def get_cpu_info() -> Dict[str, Any]:
+        """获取CPU信息
+        
+        Returns:
+            Dict: CPU信息，包含:
+                - count: CPU核心数
+                - percent: CPU使用率
+                - freq: CPU频率信息
+        """
         return {
-            'count': psutil.cpu_count(),
+            'count': psutil.cpu_count(logical=False),  # 物理核心数
+            'logical_count': psutil.cpu_count(),  # 逻辑核心数
             'percent': psutil.cpu_percent(interval=1),
-            'freq': psutil.cpu_freq()._asdict() if hasattr(psutil.cpu_freq(), '_asdict') else None
+            'freq': psutil.cpu_freq()._asdict() if hasattr(psutil.cpu_freq(), '_asdict') else None,
+            'stats': psutil.cpu_stats()._asdict()
         }
 
     @staticmethod
@@ -442,7 +442,7 @@ class SystemInfo:
     def get_network_info() -> Dict:
         return psutil.net_if_addrs()
 
-
+# 单个进程对象
 class Process:
     """单个进程对象"""
     def __init__(self, pid=None):
@@ -463,7 +463,14 @@ class Process:
             self.end_time = None
             
             # 获取进程监听的端口
-            self.port = self._get_listening_port()
+            self.port = None
+            try:
+                connections = self._process.connections()
+                listen_conns = [c for c in connections if c.status == 'LISTEN']
+                if listen_conns:
+                    self.port = listen_conns[0].laddr.port
+            except:
+                pass
         except psutil.NoSuchProcess:
             self._process = None
 
@@ -481,7 +488,6 @@ class Process:
         elif self.cmd:
             return Processes.start(self.cmd)
         return None
-
     def _get_listening_port(self) -> Optional[int]:
         """获取进程监听的端口"""
         try:
@@ -491,7 +497,7 @@ class Process:
         except (psutil.AccessDenied, psutil.NoSuchProcess):
             return None
 
-
+# 进程管理类
 class Processes:
     """进程管理类"""
     def __init__(self):
@@ -593,7 +599,7 @@ class Processes:
         except FileNotFoundError:
             self.monitored_processes = {}
 
-
+# 设备对象
 class Device:
     """设备对象"""
     def __init__(self, name: str, ip: str, port: int):
@@ -632,8 +638,7 @@ class Device:
     def __del__(self):
         """析构函数"""
         self.disconnect()
-
-
+# 设备管理类
 class Devices:
     """设备管理类"""
     def __init__(self):
@@ -658,8 +663,7 @@ class Devices:
     def list_devices(self) -> List[Device]:
         """列出所有设备"""
         return list(self._devices.values())
-
-
+# 系统对象组
 class _System(metaclass=SingletonMeta):
     """系统对象组"""
     def __init__(self):
@@ -669,8 +673,25 @@ class _System(metaclass=SingletonMeta):
         self.SystemInfo = SystemInfo()
         self.Devices = Devices()
         self.cmds = Bus()
-
-
+        for p, pp in zip(pattern_parts, path_parts):
+            if p and p[0] == '{' and p[-1] == '}':
+                continue
+            if p != pp:
+                return False
+        return True
+    
+    def _extract_params(self, route_pattern, path):
+        pattern_parts = route_pattern.split('/')
+        path_parts = path.split('/')
+        params = []
+        
+        for p, pp in zip(pattern_parts, path_parts):
+            if p and p[0] == '{' and p[-1] == '}':
+                params.append(pp)
+        return params
+    
+    def __call__(self, path, *args, **kwargs):
+        return self.execute(path, *args, **kwargs)
 # 创建全局系统对象
 System = _System()
 
@@ -684,4 +705,4 @@ getSystemInfo = lambda: Edict(
     memory=getMemoryInfo(),
     disk=getDiskInfo(),
     network=getNetworkInfo()
-)
+) 

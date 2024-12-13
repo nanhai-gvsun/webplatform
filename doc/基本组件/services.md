@@ -1,6 +1,16 @@
 ## 全局服务的需求文档
 说有代码使用python编写，支持python2和python3的语法，代码保存在module/services/__init__.py文件中。其中操作支持在windows和linux下都可以运行
 
+### 定义模块版本信息
+- __version__ = '0.0.1' # 版本号
+- __author__ = '李品勇' # 作者
+- __email__ = 'lipy.sh.gvsun.com@gmail.com' # 邮箱
+- __description__ = '模块描述' # 描述
+- __url__ = 'https://github.com/nanhai-gvsun/webplatform' # 项目地址
+- __license__ = 'MIT' # 许可证
+- __copyright__ = 'Copyright 2024 lipinyong' # 版权
+- __release_date__ = '2024-12-13' # 发布时间
+
 ### 全局常量
 - isPY2：判断当前环境是否为python2
 - isPY3：判断当前环境是否为python3
@@ -13,7 +23,22 @@
 - is32bit OS：判断当前环境是否为32位系统
 
 ### 全局定义
-##### Edict对象
+#### 汇总
+- SingletonMeta 元类：单例元类，确保每个类只有一个实例。
+- Bus 类：路由总线类，用于注册和执行路由。
+- File 类：文件操作类，支持文件的读取、写入、删除、复制和移动。
+- Folder 类：目录操作类，支持目录的创建、删除和列出内容。
+- FileSystem 类：文件系统操作类，支持文件和目录的操作。
+- CommandResult 类：命令执行结果类，包含标准输出、标准错误和返回码。
+- Console 类：控制台操作类，支持命令执行、日志记录、光标操作和屏幕清除。
+- SystemInfo 类：系统信息类，提供 CPU、内存、磁盘和网络信息的获取。
+- Process 类：进程对象类，包含进程的详细信息和操作。
+- Processes 类：进程管理类，支持进程的启动、停止、监控和查找。
+- Device 类：设备对象类，支持设备的连接、断开、读取和写入。
+- Devices 类：设备管理类，支持设备的添加、移除和查找。
+- _System 类：系统对象组，包含进程管理、控制台、文件系统、系统信息和设备管理。
+- 其他全局函数：提供获取 CPU、内存、磁盘和网络信息的函数。
+#### Edict对象
 Edict对象继承自dict，将dict[key]转换成dict.key，支持链式操作。
 - __init__ 方法：
 初始化 Edict 实例时，使用一个单独的 __dict__ 字典来存储属性，而不是直接将 self 赋值给 self.__dict__。这样可以避免循环引用问题。
@@ -27,7 +52,6 @@ Edict对象继承自dict，将dict[key]转换成dict.key，支持链式操作。
 
 - __repr__ 方法：
 使用 json.dumps 序列化 Edict 实例，并返回格式化的 JSON 字符串。这样可以方便地打印 Edict 实例的内容。
-
 #### 路由总线对象
 在当前主进程中存在的命令总线，继承自Edict，可注册命令，并可通过关键字执行命令。
 注册命令使用的是key，执行命令使用的是value。key支持目录结构，规则满足restful风格。比如以下的key：
@@ -66,10 +90,8 @@ print(bus.execute("/users/123"))  # 输出: {'id': 123, 'name': 'User Name', 'em
 print(bus.execute("/users/123/set",name="New Name",email="new@example.com").execute("/users/123"))  # 输出: {'id': 123, 'name': 'New Name', 'email': 'user@example.com'}
 ```
 路由总线对象有成员__call__,等价于执行execute方法
-
 #### FileSystem对象
 简称fs，是文件系统的抽象，提供文件的读写、删除、复制、移动、列出目录、创建目录等操作。因此fs系统至少包含两个对象，一个针对文件，一个针对目录。 。初始化时能够确定是访问本地的文件系统，还是通过ssh访问远程服务器上的文件系统，默认是本地文件系统，可通过初始化参数可以通过ssh操作远程服务器。
-
 #### Console对象
 简称con，是命令行的抽象，提供命令的执行、输出重定向、输入重定向、获取命令执行结果等操作。因此con系统至少包含两个对象，一个用于执行命令，一个用于获取命令执行结果。
 
@@ -83,10 +105,8 @@ console对象，还有两个静态成员,log和info。
 
 - info方法的需求：
     - 支持在屏幕上打印信息，支持不换行打印信息，支持光标的操作
-
 #### SystemInfo对象
 简称si，是系统信息的抽象，提供获取CPU、内存、磁盘、网络、系统信息等操作。因此si系统至少包含多个对象，每个对象对应一个系统信息，例如CPU、内存、磁盘、网络等。
-
 #### Prosseses对象
 - processes对象是进程管理的对象，管理当前进程
 - 支持返回当前进程列表
@@ -106,7 +126,6 @@ console对象，还有两个静态成员,log和info。
 - 支持通过监听端口返回指定的process对象
 - 支持启动一个线程，监控后台进程池里的进程，如果进程不存在，则自动启动。
 - 支持创建pid文件，内容是主进程的pid，如果主进程再次启动，则将之前记录的pid杀掉，将当前的pid写入pid文件。
-
 #### devices对象
 - devices对象是设备管理对象，管理当前设备
 - 支持返回当前设备列表
@@ -115,7 +134,6 @@ console对象，还有两个静态成员,log和info。
     - ip：设备ip
     - port：设备端口
 - 读写设备
-
 #### 系统对象组
 这是一组系统对象，是全局单例对象，在初始化时，会自动创建，并赋值给全局变量。对象结构如下：
 System
@@ -124,8 +142,7 @@ System
 ├── FileSystem     ：文件系统对象
 ├── SystemInfo     ：文件系统对象
 ├── cmds           ：路由总线对象
-
-#### 其他
+#### 其他全局函数
 - getCPUInfo：获取CPU信息
 - getMemoryInfo：获取内存信息
 - getDiskInfo：获取磁盘信息
