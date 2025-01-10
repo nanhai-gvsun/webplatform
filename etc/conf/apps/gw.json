@@ -1,0 +1,8 @@
+{
+    "http_default": {
+        "/cms": "http://10.106.0.222:8090",
+        "/srs": "",
+        "/srs/api":"http://10.106.0.222:9527/api",
+        "/jsonserv/api":"http://10.106.0.222:9527/api"
+    }
+}
