@@ -1,0 +1,22 @@
+services:
+  web:
+    image: webplatform-gw-debug:v1.0
+    container_name: nginx-api-gw-debug
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+    volumes:
+      - ../../nginx/conf.d:/etc/nginx/conf.d
+      - ../../../webplatform:/home/gvsun/webplatform
+      - ../../nginx/code-server/config.yaml:/home/coder/.config/code-server/config.yaml
+    networks:
+      - my-bridge-network
+    restart: unless-stopped
+
+networks:
+  my-bridge-network:
+    driver: bridge
