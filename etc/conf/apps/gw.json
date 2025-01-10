@@ -39,7 +39,7 @@
                 "mode": "proxy",
                 "url": "http://172.23.80.179:9526/",
                 "proxy_allow_upgrade": true
-            }
+            },
             "/code/": {
                 "mode": "proxy",
                 "url": "http://127.0.0.1:8443/",
