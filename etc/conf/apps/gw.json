@@ -1,8 +1,50 @@
 {
     "http_default": {
-        "/cms": "http://10.106.0.222:8090",
-        "/srs": "",
-        "/srs/api":"http://10.106.0.222:9527/api",
-        "/jsonserv/api":"http://10.106.0.222:9527/api"
+        "file": "/etc/nginx/conf.d/http_default.conf",
+        "port": 80,
+        "location": {
+            "/": {
+                "mode": "fs",
+                "path": "/home/gvsun/webplatform/web",
+                "index": "index.html"
+            },
+            "/api/": {
+                "mode": "proxy",
+                "url": "http://127.0.0.1:9527/api/"
+            },
+            "/cms": {
+                "mode": "proxy",
+                "url": "http://10.106.0.222:8090"
+            },
+            "/srs/api/": {
+                "mode": "proxy",
+                "url": "http://10.106.0.222:9527/api"
+            },
+            "/jsonserv/api/": {
+                "mode": "proxy",
+                "url": "http://10.106.0.222:9527/api"
+            }
+        }
+    },
+    "https_default": {
+        "file": "/etc/nginx/conf.d/https_default.conf",
+        "port": 443,
+        "ssl": {
+            "enable": true,
+            "cert": "/etc/nginx/conf.d/cacerts.pem",
+            "key": "/etc/nginx/conf.d/cakey.pem"
+        },
+        "location": {
+            "/": {
+                "mode": "proxy",
+                "url": "http://172.23.80.179:9526/",
+                "proxy_allow_upgrade": true
+            }
+            "/code/": {
+                "mode": "proxy",
+                "url": "http://127.0.0.1:8443/",
+                "proxy_allow_upgrade": true
+            }
+        }
     }
 }
