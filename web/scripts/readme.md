@@ -1,0 +1,11 @@
+## 脚本框架
+- 数据层：data.js
+- 元素层：element.js
+- 逻辑层：webui.js
+- 样式层：webui.css
+- 系统层：system.js
+- 工具层：util.js
+- 配置层：config.js
+- 路由层：router.js
+- 主页：index.html
+- 其他：
