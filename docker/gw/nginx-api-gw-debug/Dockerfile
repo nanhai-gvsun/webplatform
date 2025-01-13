@@ -11,11 +11,11 @@ RUN sudo rm -rf /var/lib/apt/lists/*
 # 复制初始化脚本到容器中
 COPY init.sh /usr/local/bin/init.sh
 
-# 设置初始化脚本为可执行
-# RUN chmod +x /usr/local/bin/init.sh
-
 # 暴露 code-server 和 nginx 的端口
 EXPOSE 8443 80 443
+
+# 添加挂载目录
+VOLUME "/etc/localtime" "/etc/timezone" "/etc/nginx/nginx.conf" "/etc/nginx/conf.d" "/var/log/nginx" "/var/nginx/cache" "/home/gvsun/webplatform" "/home/coder/.config/code-server/config.yaml"
 
 # 设置启动命令
 CMD ["bash", "/usr/local/bin/init.sh"]
