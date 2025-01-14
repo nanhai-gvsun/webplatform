@@ -1,0 +1,4 @@
+psutil
+paramiko
+bottle
+requests

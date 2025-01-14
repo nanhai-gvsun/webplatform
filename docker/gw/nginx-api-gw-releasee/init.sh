@@ -10,5 +10,5 @@ sudo avahi-daemon --daemonize
 # 启动 nginx
 sudo service nginx start
 sudo bash /usr/local/bin/init_git.sh
-# 启动 code-server
-code-server --bind-addr 0.0.0.0:8443 --auth none
+# 启动 python后台服务
+python /home/gvsun/webplatform/app.py &

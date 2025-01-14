@@ -9,12 +9,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime
       - /etc/timezone:/etc/timezone
-      - /home/apps/docker/nginx/webplatform/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - /home/apps/docker/nginx/webplatform/docker/nginx/conf.d:/etc/nginx/conf.d
-      - /home/apps/docker/nginx/webplatform/docker/nginx/logs:/var/log/nginx
-      - /home/apps/docker/nginx/webplatform/docker/nginx/cache:/var/nginx/cache
-      - /home/apps/docker/nginx/webplatform:/home/gvsun/webplatform
-      - /home/apps/docker/nginx/webplatform/docker/nginx/code-server/config.yaml:/home/coder/.config/code-server/config.yaml
+      - /home/apps/docker/nginx/webplatform/etc/conf/code-server:/home/coder/.config/code-server
     command: ["bash", "/usr/local/bin/init.sh"]
     restart: always
     privileged: true

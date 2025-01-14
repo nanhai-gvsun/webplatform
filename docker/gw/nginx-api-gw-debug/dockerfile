@@ -9,7 +9,7 @@ RUN sudo apt clean
 RUN sudo rm -rf /var/lib/apt/lists/*
 
 # 复制初始化脚本到容器中
-COPY init.sh /usr/local/bin/init.sh
+COPY ./docker/gw/nginx-api-gw-debug/init.sh /usr/local/bin/init.sh
 
 # 暴露 code-server 和 nginx 的端口
 EXPOSE 8443 80 443
