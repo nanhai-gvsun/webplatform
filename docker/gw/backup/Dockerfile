@@ -1,6 +1,18 @@
+# 使用 code-server 官方镜像作为基础镜像
+# 运行docker build时需要到/webplatform目录下进行，对应命令如下：
+# docker build -t nginx-api-gw-debug:v1.0 -f docker/gw/nginx-api-gw-debug/Dockerfile .
 FROM codercom/code-server:latest
+
+# 复制代码到容器中
+# RUN sudo mkdir -p /home/gvsun/webplatform
+# COPY ./ /home/gvsun/webplatform
+# 设置工作目录
 WORKDIR /home/gvsun/webplatform
+
+# 将当前目录下的所有文件和目录复制到容器中的 /home/gvsun/webplatform 目录
 COPY . .
+
+# 安装必要的工具
 RUN sudo apt update 
 RUN sudo apt install -y curl
 RUN sudo apt install -y tcpdump 
@@ -39,3 +51,5 @@ VOLUME "/etc/localtime" "/etc/timezone" "/home/gvsun/webplatform"
 # 设置启动命令
 CMD ["bash", "/usr/local/bin/init.sh"]
 ENTRYPOINT ["bash", "/usr/local/bin/init.sh"]
+# 启动nginx
+# CMD ["nginx", "-g", "daemon off;"]
