@@ -1,5 +1,34 @@
 {
     "version": "1.0.0",
     "build": "1",
-    "releaseDate": "2025-01-14T00:00:00Z"
+    "releaseDate": "2025-01-14T00:00:00Z+08:00",
+    "timezone": "Asia/Shanghai",
+    "path": "/home/gvsun/webplatform",
+    "registered_to_parent": true,
+    "accepts_child_registration": true,
+    "node": {
+        "node_id": "",
+        "parent": [
+            {
+                "enable": "off",
+                "node_id": "",
+                "host": "",
+                "port":"",
+                "user": "",
+                "password": "",
+                "token": ""
+            }
+        ],
+        "children":[
+            {
+                "enable": "off",
+                "node_id": "",
+                "host": "",
+                "port":"",
+                "user": "",
+                "password": "",
+                "token": ""
+            }
+        ]
+    }
 }

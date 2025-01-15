@@ -3,13 +3,18 @@
 import os,sys,time
 from module.services import *
 
-path=os.path.dirname(os.path.abspath(__file__))
-runtime=Edict()
-if not os.path.exists(os.path.join(path,"etc/conf/apps/webrelease.json")):
-    print("配置文件不存在")
-    os.system(f"cp {path}/etc/default/webrelease.json {path}/etc/conf/apps/webrelease.json")    
+runtime=Edict(
+    path=os.path.dirname(os.path.abspath(__file__))
+)
 
-# runtime.conf=File(path=f"{path}/etc/conf/apps/webrelease.json",autoLoad=True)
+# 配置文件是etc/conf/apps/webrelease.json
+runtime.config.filepath="etc/conf/apps/webrelease.json"
+runtime.config.default.filepath="etc/default/webrelease.json"
+if not os.path.exists(os.path.join(runtime.path,runtime.config.filepath)):
+    print("配置文件不存在")
+    os.system(f"cp {runtime.path}/{runtime.config.default.filepath} {runtime.path}/{runtime.config.filepath}")    
+
+
 
 
 

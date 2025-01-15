@@ -37,6 +37,7 @@ RUN sudo ln -sf /home/gvsun/webplatform/etc/logs /var/log/nginx
 RUN sudo mkdir -p /var/nginx
 RUN sudo ln -sf /home/gvsun/webplatform/etc/cache /var/nginx/cache 
 RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/nginx-api-gw-debug/init.sh /usr/local/bin/init.sh 
+# RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/nginx-api-gw-release/init.sh /usr/local/bin/init.sh 
 RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/init_git.sh /usr/local/bin/init_git.sh 
 
 
@@ -47,8 +48,9 @@ RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/init_git.sh /usr/local/bin/ini
 EXPOSE 8443 80 443
 
 # 添加挂载目录
-# VOLUME "/etc/localtime" "/etc/timezone" "/etc/nginx/nginx.conf" "/etc/nginx/conf.d" "/var/log/nginx" "/var/nginx/cache" "/home/gvsun/webplatform" "/home/coder/.config/code-server/config.yaml"
-
+VOLUME "/etc/localtime" "/etc/timezone" "/home/gvsun/webplatform"
 # 设置启动命令
 CMD ["bash", "/usr/local/bin/init.sh"]
 ENTRYPOINT ["bash", "/usr/local/bin/init.sh"]
+# 启动nginx
+# CMD ["nginx", "-g", "daemon off;"]

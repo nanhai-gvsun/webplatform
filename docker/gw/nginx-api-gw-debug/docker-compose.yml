@@ -9,6 +9,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime
       - /etc/timezone:/etc/timezone
+      - /home/apps/docker/nginx/webplatform:/home/gvsun/webplatform
       - /home/apps/docker/nginx/webplatform/etc/conf/code-server:/home/coder/.config/code-server
     command: ["bash", "/usr/local/bin/init.sh"]
     restart: always
