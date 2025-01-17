@@ -17,7 +17,7 @@ RUN pip install requests bottle paramiko --break-system-packages
 # debug版安装code-server
 RUN mkdir -p /root/.config/code-server
 COPY ./install.sh /root/.config/code-server/install.sh
-COPY ./code-server/config.yaml /root/.config/code-server/config.yaml
+COPY ./config.yaml /root/.config/code-server/config.yaml
 RUN bash /root/.config/code-server/install.sh
 
 # 克隆webplatform

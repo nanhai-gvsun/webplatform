@@ -1,0 +1,5 @@
+psutil
+paramiko
+bottle
+requests
+pyyaml

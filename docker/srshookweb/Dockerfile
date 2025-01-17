@@ -4,24 +4,30 @@ FROM ossrs/srs:v6.0.155
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Shanghai
 
-# 更新包列表并安装必要的软件包
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    git \
-    nginx \
-    tzdata \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# 安装Python3、pip和基本网络工具
+RUN apt-get update && \
+    apt-get install -y curl git python3 python3-pip net-tools iputils-ping 
+RUN ln -sf /usr/bin/python3 /usr/bin/python 
 
-# 验证安装
-RUN python3 --version && \
-    git --version && \
-    nginx -v
+# 安装网络调试工具
+RUN apt install -y tcpdump nmap avahi-daemon avahi-utils dnsutils dbus
+# 清理安装备份
+RUN apt clean && rm -rf /var/lib/apt/lists/*
 
-# 创建app目录并复制启动脚本
-COPY app /usr/local/srs/app
-RUN chmod +x /usr/local/srs/app/start.sh
+# 安装Python库
+COPY ./requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
+
+# debug版安装code-server
+RUN mkdir -p /root/.config/code-server
+COPY ./install.sh /root/.config/code-server/install.sh
+COPY ./code-server-config.yaml /root/.config/code-server/config.yaml
+RUN bash /root/.config/code-server/install.sh
+
+# 克隆webplatform
+RUN mkdir -p /home/gvsun
+RUN cd /home/gvsun && git clone https://github.com/nanhai-gvsun/webplatform.git
+WORKDIR /home/gvsun/webplatform
 
 # 继承基础镜像的配置
 VOLUME /usr/local/srs/objs/nginx/html
@@ -34,4 +40,5 @@ EXPOSE 1935 1985 8080 9000 5060 8000/udp
 WORKDIR /usr/local/srs
 
 # 修改启动命令为执行启动脚本
-CMD ["./app/start.sh"]
+CMD ["bash", "/home/gvsun/webplatform/docker/srshookweb/init.sh"]
+ENTRYPOINT ["bash", "/home/gvsun/webplatform/docker/srshookweb/init.sh"]
