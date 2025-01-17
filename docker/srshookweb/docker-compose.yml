@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   web:
-    image: nginx-api-gw:v1.0
-    container_name: nginx-api-gw
+    image: :v1.0
+    container_name: nginx-gw
     build:
       context: .
       dockerfile: Dockerfile
@@ -17,7 +17,7 @@ services:
       - ./cache:/var/nginx/cache
     networks:
       - my-bridge-network
-    restart: always
+    restart: unless-stopped
 
 networks:
   my-bridge-network:
