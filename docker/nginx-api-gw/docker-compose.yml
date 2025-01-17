@@ -11,12 +11,14 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ../nginx/conf.d:/etc/nginx/conf.d
-      - ../nginx/webplatform:/home/gvsun/webplatform
+      - ./docker/gw/nginx/conf.d:/etc/nginx/conf.d
+      - ./:/home/gvsun/webplatform
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
     networks:
       - my-bridge-network
-    restart: unless-stopped
-
+    restart: always
+    
 networks:
   my-bridge-network:
     driver: bridge

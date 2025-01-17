@@ -56,12 +56,12 @@ echo "准备发布以下配置："
 echo "版本号: $VERSION"
 echo "分支类型: $BRANCH"
 echo ""
-read -p "是否继续? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "操作已取消"
-    exit 1
-fi
+# read -p "是否继续? (y/n) " -n 1 -r
+# echo
+# if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+#     echo "操作已取消"
+#     exit 1
+# fi
 # 生成dockerfile
 if [[ "$BRANCH" == "debug" ]]; then
 cat <<EOF > Dockerfile
@@ -91,20 +91,16 @@ RUN sudo ln -sf /home/gvsun/webplatform/etc/conf/conf.d /etc/nginx/conf.d
 RUN sudo ln -sf /home/gvsun/webplatform/etc/logs /var/log/nginx 
 RUN sudo mkdir -p /var/nginx
 RUN sudo ln -sf /home/gvsun/webplatform/etc/cache /var/nginx/cache 
-RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/init.sh /usr/local/bin/init.sh 
-RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/init_git.sh /usr/local/bin/init_git.sh 
-
-
+RUN sudo cp /home/gvsun/webplatform/docker/nginx-api-gw/init.sh /usr/local/bin/init.sh 
+RUN sudo cp /home/gvsun/webplatform/docker/nginx-api-gw/init_git.sh /usr/local/bin/init_git.sh 
 # 安装 Python 依赖
-RUN pip install -r/home/gvsun/webplatform/docker/gw/requirements.txt --break-system-packages
-
+RUN pip install -r /home/gvsun/webplatform/docker/nginx-api-gw/requirements.txt --break-system-packages
 # 暴露 code-server 和 nginx 的端口
 EXPOSE 8443 80 443
-
 # 添加挂载目录
 VOLUME "/etc/localtime" "/etc/timezone" "/home/gvsun/webplatform"
 # 设置启动命令
-CMD ["bash", "/usr/local/bin/init.sh"]
+CMD ["bash", "/home/gvsun/webplatform/docker/nginx-api-gw/init.sh"]
 ENTRYPOINT ["bash", "/usr/local/bin/init.sh"]
 EOF
 fi
@@ -150,12 +146,14 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ../nginx/conf.d:/etc/nginx/conf.d
-      - ../nginx/webplatform:/home/gvsun/webplatform
+      - ./docker/gw/nginx/conf.d:/etc/nginx/conf.d
+      - ./:/home/gvsun/webplatform
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
     networks:
       - my-bridge-network
-    restart: unless-stopped
-
+    restart: always
+    
 networks:
   my-bridge-network:
     driver: bridge
@@ -188,20 +186,38 @@ fi
 
 # 构建Docker镜像
 echo "开始构建Docker镜像..."
-# docker build \
-#     --build-arg VERSION=$VERSION \
-#     --build-arg BRANCH=$BRANCH \
-#     -t gw:$VERSION-$BRANCH \
-#     .
+cd ../..
+pwd
+# echo "docker build --build-arg VERSION=$VERSION --build-arg BRANCH=$BRANCH -t $PROJECT-$BRANCH:$VERSION -f $(dirname $0)/Dockfile ."
+docker build \
+     --build-arg VERSION=$VERSION \
+     --build-arg BRANCH=$BRANCH \
+     -t $PROJECT-$BRANCH:$VERSION \
+     -f $(dirname $0)/Dockerfile \
+     .
 
-# # 检查构建结果
-# if [ $? -eq 0 ]; then
-#     echo "构建成功！"
-#     echo "镜像标签: gw:$VERSION-$BRANCH"
-# else
-#     echo "构建失败！"
-#     exit 1
-# fi 
+# 检查构建结果
+if [ $? -eq 0 ]; then
+    echo "构建成功！"
+    echo "镜像标签: $PROJECT-$BRANCH:$VERSION"
+    
+    # 使用 docker-compose 启动服务
+    echo "开始使用 Docker Compose 编排服务..."
+    echo "docker-compose --file $(dirname $0)/docker-compose.yml up -d "
+    docker-compose --file $(dirname $0)/docker-compose.yml up -d 
+    
+    if [ $? -eq 0 ]; then
+        echo "服务编排成功！"
+        echo "可以通过以下命令查看服务状态："
+        echo "docker-compose ps"
+    else
+        echo "服务编排失败！"
+        exit 1
+    fi
+else
+    echo "构建失败！"
+    exit 1
+fi 
 
 # 返回当前目录
 cd $CURRENT_DIR

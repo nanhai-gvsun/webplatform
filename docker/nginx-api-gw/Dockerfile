@@ -24,18 +24,14 @@ RUN sudo ln -sf /home/gvsun/webplatform/etc/conf/conf.d /etc/nginx/conf.d
 RUN sudo ln -sf /home/gvsun/webplatform/etc/logs /var/log/nginx 
 RUN sudo mkdir -p /var/nginx
 RUN sudo ln -sf /home/gvsun/webplatform/etc/cache /var/nginx/cache 
-RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/init.sh /usr/local/bin/init.sh 
-RUN sudo ln -sf /home/gvsun/webplatform/docker/gw/init_git.sh /usr/local/bin/init_git.sh 
-
-
+RUN sudo cp /home/gvsun/webplatform/docker/nginx-api-gw/init.sh /usr/local/bin/init.sh 
+RUN sudo cp /home/gvsun/webplatform/docker/nginx-api-gw/init_git.sh /usr/local/bin/init_git.sh 
 # 安装 Python 依赖
-RUN pip install -r/home/gvsun/webplatform/docker/gw/requirements.txt --break-system-packages
-
+RUN pip install -r /home/gvsun/webplatform/docker/nginx-api-gw/requirements.txt --break-system-packages
 # 暴露 code-server 和 nginx 的端口
 EXPOSE 8443 80 443
-
 # 添加挂载目录
 VOLUME "/etc/localtime" "/etc/timezone" "/home/gvsun/webplatform"
 # 设置启动命令
-CMD ["bash", "/usr/local/bin/init.sh"]
+CMD ["bash", "/home/gvsun/webplatform/docker/nginx-api-gw/init.sh"]
 ENTRYPOINT ["bash", "/usr/local/bin/init.sh"]
