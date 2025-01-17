@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # 启动 dbus
-sudo mkdir -p /run/dbus
-sudo dbus-daemon --system
+mkdir -p /run/dbus
+dbus-daemon --system
 
 # 启动 avahi-daemon
-sudo avahi-daemon --daemonize
+avahi-daemon --daemonize
+git config --global user.email "lipy.sh@outlook.com"
+git config --global user.name "lipy"
 
-# 启动 nginx
-sudo service nginx start
-sudo bash /usr/local/bin/init_git.sh
-
-code-server --bind-addr 0.0.0.0:8443 --auth none
+code-server &
+nginx -g "daemon off;"

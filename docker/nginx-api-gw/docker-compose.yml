@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   web:
-    image: webplatform-gw-debug:1.0.0
-    container_name: nginx-api-gw
+    image: nginx-gw:v1.0
+    container_name: nginx-gw
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,14 +11,14 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./docker/gw/nginx/conf.d:/etc/nginx/conf.d
-      - ./:/home/gvsun/webplatform
-      - /etc/localtime:/etc/localtime
-      - /etc/timezone:/etc/timezone
+      - ./conf.d:/etc/nginx/conf.d
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./logs:/var/log/nginx
+      - ./cache:/var/nginx/cache
     networks:
       - my-bridge-network
-    restart: always
-    
+    restart: unless-stopped
+
 networks:
   my-bridge-network:
     driver: bridge

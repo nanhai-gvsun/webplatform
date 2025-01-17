@@ -1,37 +1,32 @@
-FROM codercom/code-server:latest
+# 使用官方的nginx镜像作为基础镜像
+FROM nginx:latest
+
+# 安装Python3、pip和基本网络工具
+RUN apt-get update && \
+    apt-get install -y curl git python3 python3-pip net-tools iputils-ping 
+RUN ln -sf /usr/bin/python3 /usr/bin/python 
+
+# 安装网络调试工具
+RUN apt install -y tcpdump nmap avahi-daemon avahi-utils dnsutils dbus
+# 清理安装备份
+RUN apt clean && rm -rf /var/lib/apt/lists/*
+
+# 安装Python库
+RUN pip install requests bottle paramiko --break-system-packages
+
+# debug版安装code-server
+RUN mkdir -p /root/.config/code-server
+COPY ./install.sh /root/.config/code-server/install.sh
+COPY ./code-server/config.yaml /root/.config/code-server/config.yaml
+RUN bash /root/.config/code-server/install.sh
+
+# 克隆webplatform
+RUN mkdir -p /home/gvsun
+RUN cd /home/gvsun && git clone https://github.com/nanhai-gvsun/webplatform.git
 WORKDIR /home/gvsun/webplatform
-COPY . .
-RUN sudo apt update 
-RUN sudo apt install -y curl
-RUN sudo apt install -y tcpdump 
-RUN sudo apt install -y nginx 
-RUN sudo apt install -y python3 
-RUN sudo apt install -y python3-pip 
-RUN sudo apt install -y iputils-ping 
-RUN sudo apt install -y net-tools 
-RUN sudo apt install -y nmap 
-RUN sudo apt install -y avahi-daemon 
-RUN sudo apt install -y avahi-utils 
-RUN sudo apt install -y dnsutils 
-RUN sudo apt install -y dbus
-RUN sudo ln -sf /usr/bin/python3 /usr/bin/python 
-RUN sudo apt clean 
-RUN sudo rm -rf /var/lib/apt/lists/*
-RUN sudo rm -rf /etc/nginx/nginx.conf 
-RUN sudo ln -sf /home/gvsun/webplatform/etc/conf/apps/nginx.conf /etc/nginx/nginx.conf
-RUN sudo rm -rf /etc/nginx/conf.d 
-RUN sudo ln -sf /home/gvsun/webplatform/etc/conf/conf.d /etc/nginx/conf.d 
-RUN sudo ln -sf /home/gvsun/webplatform/etc/logs /var/log/nginx 
-RUN sudo mkdir -p /var/nginx
-RUN sudo ln -sf /home/gvsun/webplatform/etc/cache /var/nginx/cache 
-RUN sudo cp /home/gvsun/webplatform/docker/nginx-api-gw/init.sh /usr/local/bin/init.sh 
-RUN sudo cp /home/gvsun/webplatform/docker/nginx-api-gw/init_git.sh /usr/local/bin/init_git.sh 
-# 安装 Python 依赖
-RUN pip install -r /home/gvsun/webplatform/docker/nginx-api-gw/requirements.txt --break-system-packages
-# 暴露 code-server 和 nginx 的端口
-EXPOSE 8443 80 443
-# 添加挂载目录
-VOLUME "/etc/localtime" "/etc/timezone" "/home/gvsun/webplatform"
-# 设置启动命令
+
+# 暴露80端口
+EXPOSE 80 443
+
 CMD ["bash", "/home/gvsun/webplatform/docker/nginx-api-gw/init.sh"]
-ENTRYPOINT ["bash", "/usr/local/bin/init.sh"]
+ENTRYPOINT ["bash", "/home/gvsun/webplatform/docker/nginx-api-gw/init.sh"]
