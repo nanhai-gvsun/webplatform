@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统登录</title>
+    <link rel="stylesheet" href="./css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="domain">工作域</label>
+                <select id="domain" required>
+                    <!-- 将通过 JavaScript 动态填充 -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <div class="password-container">
+                    <input type="password" id="password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        👁️
+                    </button>
+                </div>
+            </div>
+            <button type="submit">登录</button>
+        </form>
+    </div>
+    <script src="./scripts/login.js"></script>
+</body>
+</html> 

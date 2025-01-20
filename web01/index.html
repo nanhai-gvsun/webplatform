@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Debug Platform</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-image: url('https://picsum.photos/1920/1080');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 桌面图标样式 */
+        .desktop {
+            padding: 20px;
+        }
+
+        .desktop-icon {
+            width: 80px;
+            text-align: center;
+            margin: 10px;
+            cursor: pointer;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .desktop-icon img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 5px;
+        }
+
+        /* 任务栏样式 */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background-color: rgba(24, 24, 24, 0.95);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            justify-content: space-between;
+        }
+
+        .start-button {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 15px;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-right: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .start-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .start-button img {
+            height: 24px;
+            width: 24px;
+        }
+
+        /* 窗口样式 */
+        .window {
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 400px;
+            min-height: 300px;
+        }
+
+        .window-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #1a1a1a;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-title {
+            margin: 0;
+            font-size: 14px;
+            color: white;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .window-button {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            font-size: 16px;
+        }
+
+        .window-button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .window-button.minimize:hover {
+            background: #0078D4;
+        }
+
+        .window-button.maximize:hover {
+            background: #0078D4;
+        }
+
+        .window-button.close:hover {
+            background: #E81123;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: white;
+        }
+
+        .window-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* 最小化动画 */
+        @keyframes minimize {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(0.1); opacity: 0; }
+        }
+
+        /* 最大化动画 */
+        @keyframes maximize {
+            from { transform: scale(0.9); }
+            to { transform: scale(1); }
+        }
+
+        .clock {
+            color: white;
+            font-size: 14px;
+            padding: 0 15px;
+            cursor: pointer;
+        }
+
+        /* 日历窗口特殊样式 */
+        .calendar-window .window-content {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            background: #f5f5f5;
+        }
+
+        .tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #007bff;
+            color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 日历样式 */
+        .calendar {
+            background: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+
+        .calendar-day {
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .calendar-day:hover {
+            background: #f0f0f0;
+        }
+
+        .calendar-day.today {
+            background: #007bff;
+            color: white;
+        }
+
+        .calendar-day.selected {
+            background: #e3f2fd;
+            border: 1px solid #007bff;
+        }
+
+        /* 备忘录样式 */
+        .memo-list {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+
+        .memo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .memo-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .memo-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .memo-input button {
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        /* 时区选择样式 */
+        .timezone-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .timezone-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .timezone-item:hover {
+            background: #f5f5f5;
+        }
+
+        .timezone-item.selected {
+            background: #e3f2fd;
+        }
+
+        /* 登录窗口样式 */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .login-window {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 300px;
+            position: relative;
+        }
+
+        .login-window h2 {
+            margin: 0 0 20px 0;
+            text-align: center;
+            color: #333;
+            cursor: grab;
+            user-select: none;
+            padding: 10px 0;
+        }
+
+        .login-window h2:active {
+            cursor: grabbing;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .login-form button:hover {
+            background: #0056b3;
+        }
+
+        .login-error {
+            color: red;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .login-form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        .start-menu {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            width: 200px;
+            background: rgba(24, 24, 24, 0.95);
+            border-radius: 5px;
+            padding: 5px;
+            display: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-item img {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .taskbar-windows {
+            flex: 1;
+            display: flex;
+            margin: 0 10px;
+            gap: 5px;
+            overflow-x: auto;
+        }
+
+        .taskbar-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            min-width: 120px;
+            max-width: 200px;
+            transition: background 0.2s;
+        }
+
+        .taskbar-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .taskbar-item.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .taskbar-item img {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+
+        .taskbar-item span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-window">
+            <h2>登录系统</h2>
+            <div class="login-form">
+                <div class="login-error" id="loginError">用户名或密码错误</div>
+                <select id="domain" class="login-input">
+                    <!-- 选项将由 JavaScript 动态加载 -->
+                </select>
+                <input type="text" id="username" placeholder="用户名" required>
+                <input type="password" id="password" placeholder="密码" required>
+                <button onclick="login()">登录</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="desktop" id="desktop">
+        <!-- 桌面图标将通过JavaScript动态加载 -->
+    </div>
+
+    <div class="taskbar">
+        <div class="start-button" onclick="toggleStartMenu()">
+            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Start">
+            <span>GVSUN</span>
+        </div>
+        <div class="start-menu" id="startMenu">
+            <div class="menu-item" onclick="openWindow('settings', '设置', '/settings.html')">
+                <img src="https://cdn-icons-png.flaticon.com/512/3524/3524659.png" alt="设置">
+                <span>设置</span>
+            </div>
+            <div class="menu-item" onclick="logout()">
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828479.png" alt="退出">
+                <span>退出</span>
+            </div>
+        </div>
+        <div class="taskbar-windows" id="taskbarWindows">
+            <!-- 任务栏窗口图标将在这里动态添加 -->
+        </div>
+        <div class="clock" id="clock" onclick="openCalendarWindow()"></div>
+    </div>
+
+    <script>
+        let windows = {};
+        let activeWindow = null;
+        let zIndex = 1000;
+
+        // 检查登录状态
+        let isLoggedIn = false;
+
+        let loginWindowDragging = false;
+        let loginWindowInitialX;
+        let loginWindowInitialY;
+        let loginWindowXOffset = 0;
+        let loginWindowYOffset = 0;
+
+        let currentDomain = null;
+        let domains = null;
+
+        async function initDomains() {
+            try {
+                console.log('开始加载工作域配置...');
+                const response = await fetch('./data/domains.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                domains = await response.json();
+                console.log('工作域配置加载成功:', domains);
+                
+                const domainSelect = document.getElementById('domain');
+                if (!domainSelect) {
+                    throw new Error('找不到域选择下拉框元素');
+                }
+                
+                // 清空现有选项
+                domainSelect.innerHTML = '';
+                
+                // 添加所有域
+                domains.domains.forEach(domain => {
+                    const option = document.createElement('option');
+                    option.value = domain.id;
+                    option.textContent = `${domain.name} - ${domain.description}`;
+                    domainSelect.appendChild(option);
+                    console.log('添加域选项:', domain.name);
+                });
+                
+                // 设置默认域
+                if (domains.default) {
+                    domainSelect.value = domains.default;
+                    currentDomain = domains.domains.find(d => d.id === domains.default);
+                    console.log('设置默认域:', domains.default);
+                }
+                
+            } catch (error) {
+                console.error('加载工作域配置错误:', error);
+                const errorElement = document.getElementById('loginError');
+                errorElement.textContent = '加载工作域失败: ' + error.message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function createWindow(id, title, url) {
+            const win = document.createElement('div');
+            win.className = 'window';
+            win.id = id;
+            win.style.zIndex = zIndex++;
+
+            // 设置初始位置和大小
+            win.style.left = '50%';
+            win.style.top = '50%';
+            win.style.width = '800px';
+            win.style.height = '600px';
+            win.style.transform = 'translate(-50%, -50%)';
+
+            win.innerHTML = `
+                <div class="window-header">
+                    <h3 class="window-title">${title}</h3>
+                    <div class="window-controls">
+                        <button class="window-button minimize" onclick="minimizeWindow('${id}')" title="最小化">─</button>
+                        <button class="window-button maximize" onclick="maximizeWindow('${id}')" title="最大化">□</button>
+                        <button class="window-button close" onclick="closeWindow('${id}')" title="关闭">×</button>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <iframe src="${url}" frameborder="0" allowtransparency="true"></iframe>
+                </div>
+            `;
+
+            // 窗口拖动功能
+            const header = win.querySelector('.window-header');
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.window-controls')) return; // 如果点击的是控制按钮，不启动拖动
+                isDragging = true;
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                win.style.transition = 'none'; // 拖动时禁用过渡效果
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    // 更新窗口位置，使用 left/top 而不是 transform
+                    win.style.transform = 'none';
+                    win.style.left = `${currentX + parseInt(win.style.width) / 2}px`;
+                    win.style.top = `${currentY + parseInt(win.style.height) / 2}px`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                win.style.transition = ''; // 恢复过渡效果
+            });
+
+            // 添加窗口点击事件，使其显示在最前面
+            win.addEventListener('mousedown', () => {
+                focusWindow(id);
+            });
+
+            document.body.appendChild(win);
+            addTaskbarItem(id, title);
+            return win;
+        }
+
+        function addTaskbarItem(id, title) {
+            const taskbarWindows = document.getElementById('taskbarWindows');
+            const icon = getIconForWindow(id);
+            
+            const item = document.createElement('div');
+            item.className = 'taskbar-item';
+            item.setAttribute('data-window-id', id);
+            item.innerHTML = `
+                <img src="${icon}" alt="${title}">
+                <span>${title}</span>
+            `;
+            
+            item.addEventListener('click', () => toggleWindow(id));
+            taskbarWindows.appendChild(item);
+        }
+
+        function getIconForWindow(id) {
+            // 根据窗口ID返回对应的图标URL
+            const icons = {
+                'code': 'https://cdn-icons-png.flaticon.com/512/1088/1088537.png',
+                'terminal': 'https://cdn-icons-png.flaticon.com/512/2535/2535557.png',
+                'browser': 'https://cdn-icons-png.flaticon.com/512/2965/2965300.png',
+                'settings': 'https://cdn-icons-png.flaticon.com/512/3524/3524659.png',
+                // ... 其他图标映射
+            };
+            return icons[id] || 'https://cdn-icons-png.flaticon.com/512/1250/1250680.png';
+        }
+
+        function toggleWindow(id) {
+            const win = windows[id];
+            if (!win) return;
+
+            if (win.style.display === 'none') {
+                // 如果窗口是隐藏的，显示它
+                win.style.display = 'block';
+                focusWindow(id);
+            } else {
+                // 如果窗口已经显示，则最小化它
+                minimizeWindow(id);
+            }
+            updateTaskbarItems();
+        }
+
+        function focusWindow(id) {
+            const win = windows[id];
+            if (!win) return;
+
+            // 将窗口置于最前
+            win.style.zIndex = zIndex++;
+            activeWindow = win;
+
+            // 更新任务栏项的激活状态
+            updateTaskbarItems();
+        }
+
+        function minimizeWindow(id) {
+            const win = windows[id];
+            if (!win) return;
+
+            win.style.display = 'none';
+            updateTaskbarItems();
+        }
+
+        function closeWindow(id) {
+            const win = windows[id];
+            if (!win) return;
+
+            // 移除窗口和任务栏项
+            win.remove();
+            delete windows[id];
+            
+            const taskbarItem = document.querySelector(`.taskbar-item[data-window-id="${id}"]`);
+            if (taskbarItem) {
+                taskbarItem.remove();
+            }
+        }
+
+        function updateTaskbarItems() {
+            // 更新所有任务栏项的激活状态
+            document.querySelectorAll('.taskbar-item').forEach(item => {
+                const windowId = item.getAttribute('data-window-id');
+                const win = windows[windowId];
+                
+                if (win && win.style.display !== 'none' && win === activeWindow) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function openWindow(id, title, url) {
+            // 检查是否是外部链接（以 https:// 开头）
+            if (url.startsWith('https://')) {
+                // 在新标签页中打开外部链接
+                window.open(url, '_blank');
+                return;
+            }
+
+            // 内部页面使用原有的窗口系统
+            if (windows[id]) {
+                windows[id].style.display = 'block';
+                windows[id].style.zIndex = zIndex++;
+            } else {
+                windows[id] = createWindow(id, title, url);
+                windows[id].style.display = 'block';
+            }
+            activeWindow = windows[id];
+        }
+
+        function maximizeWindow(id) {
+            const win = windows[id];
+            if (!win) return;
+
+            if (win.style.width === '100vw') {
+                // 还原窗口
+                win.style.transition = 'all 0.3s';
+                win.style.width = '800px';
+                win.style.height = '600px';
+                win.style.left = '50%';
+                win.style.top = '50%';
+                win.style.transform = 'translate(-50%, -50%)';
+                win.querySelector('.window-button.maximize').textContent = '□';
+            } else {
+                // 最大化窗口
+                win.style.transition = 'all 0.3s';
+                win.style.width = '100vw';
+                win.style.height = 'calc(100vh - 40px)';
+                win.style.left = '0';
+                win.style.top = '0';
+                win.style.transform = 'none';
+                win.querySelector('.window-button.maximize').textContent = '❐';
+            }
+
+            // 重置拖动状态
+            win.setAttribute('data-x', '0');
+            win.setAttribute('data-y', '0');
+
+            setTimeout(() => {
+                win.style.transition = '';
+            }, 300);
+        }
+
+        // 修改初始化函数，移除重复的监听器
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('页面加载完成，开始初始化...');
+            initializeDesktop().catch(error => {
+                console.error('初始化失败:', error);
+            });
+        });
+
+        // 添加统一的初始化函数
+        async function initializeDesktop() {
+            try {
+                // 初始化工作域
+                await initDomains();
+                
+                // 初始化登录窗口拖动
+                initLoginWindowDrag();
+                
+                // 检查 sessionStorage 中是否存在用户信息
+                const user = sessionStorage.getItem('user');
+                if (user) {
+                    // 如果存在用户信息，直接显示桌面
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    showDesktop();
+                    loadDesktopIcons();
+                    updateClock();
+                    setInterval(updateClock, 1000);
+                } else {
+                    // 如果不存在用户信息，只显示登录界面
+                    document.getElementById('desktop').style.display = 'none';
+                    document.querySelector('.taskbar').style.display = 'none';
+                    document.getElementById('loginOverlay').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('初始化桌面错误:', error);
+                const errorElement = document.getElementById('loginError');
+                errorElement.textContent = '系统初始化失败';
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // 修改登录函数
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const domainId = document.getElementById('domain').value;
+            
+            // 获取当前选中的域配置
+            currentDomain = domains.domains.find(d => d.id === domainId);
+            
+            try {
+                let user = null;
+                
+                if (domainId === 'local') {
+                    // 本地验证
+                    const response = await fetch(currentDomain.authUrl);
+                    const data = await response.json();
+                    user = data.users.find(u => 
+                        u.username === username && u.password === password
+                    );
+                } else {
+                    // 远程验证
+                    const response = await fetch(currentDomain.authUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username,
+                            password
+                        })
+                    });
+                    const data = await response.json();
+                    user = data.success ? data.user : null;
+                }
+                
+                if (user) {
+                    // 登录成功，保存用户信息到 sessionStorage
+                    sessionStorage.setItem('user', JSON.stringify({
+                        username: user.username,
+                        loginTime: new Date().toISOString(),
+                        domain: currentDomain.id
+                    }));
+                    
+                    // 隐藏登录窗口
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    
+                    // 显示并初始化桌面
+                    showDesktop();
+                    loadDesktopIcons();
+                    updateClock();
+                    setInterval(updateClock, 1000);
+                } else {
+                    // 登录失败显示错误信息
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                document.getElementById('loginError').textContent = '登录系统错误';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        // 修改显示桌面函数
+        function showDesktop() {
+            document.getElementById('desktop').style.display = 'block';
+            document.querySelector('.taskbar').style.display = 'flex';
+        }
+
+        // 修改登出函数
+        function logout() {
+            // 清除 sessionStorage 中的用户信息
+            sessionStorage.removeItem('user');
+            
+            // 隐藏开始菜单
+            document.getElementById('startMenu').style.display = 'none';
+            
+            // 隐藏桌面
+            document.getElementById('desktop').style.display = 'none';
+            document.querySelector('.taskbar').style.display = 'none';
+            
+            // 显示登录窗口
+            document.getElementById('loginOverlay').style.display = 'flex';
+            
+            // 清除登录表单
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').style.display = 'none';
+            
+            // 关闭所有打开的窗口
+            Object.values(windows).forEach(win => {
+                win.style.display = 'none';
+            });
+            windows = {};
+        }
+
+        // 修改 loadDesktopIcons 函数
+        async function loadDesktopIcons() {
+            try {
+                const response = await fetch('./data/desktop.json');
+                const data = await response.json();
+                const desktop = document.getElementById('desktop');
+                
+                desktop.innerHTML = data.icons.map(icon => `
+                    <div class="desktop-icon" onclick="openWindow('${icon.id}', '${icon.title}', '${icon.url}')">
+                        <img src="${icon.icon}" alt="${icon.title}">
+                        <div>${icon.title}</div>
+                    </div>
+                `).join('');
+                
+                // 显示桌面内容
+                showDesktop();
+            } catch (error) {
+                console.error('加载桌面图标错误:', error);
+            }
+        }
+
+        // 更新时钟
+        function updateClock() {
+            const clock = document.getElementById('clock');
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            clock.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // 添加日历窗口创建函数
+        function createCalendarWindow() {
+            const win = document.createElement('div');
+            win.className = 'window calendar-window';
+            win.id = 'calendar';
+            win.style.width = '400px';
+            win.style.height = '500px';
+            win.style.zIndex = zIndex++;
+            win.innerHTML = `
+                <div class="window-header">
+                    <h3 class="window-title">日期和时间</h3>
+                    <div class="window-controls">
+                        <button class="window-button minimize">─</button>
+                        <button class="window-button maximize">□</button>
+                        <button class="window-button close">×</button>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('calendar')">日历</button>
+                        <button class="tab" onclick="switchTab('timezone')">时区</button>
+                        <button class="tab" onclick="switchTab('time')">时间</button>
+                    </div>
+                    <div class="tab-content active" id="calendar-tab">
+                        <div class="calendar">
+                            <div class="calendar-header">
+                                <button onclick="changeMonth(-1)">◀</button>
+                                <span id="current-month"></span>
+                                <button onclick="changeMonth(1)">▶</button>
+                            </div>
+                            <div class="calendar-grid" id="calendar-grid"></div>
+                        </div>
+                        <div class="memo-list">
+                            <div class="memo-input">
+                                <input type="text" id="memo-input" placeholder="添加备忘...">
+                                <button onclick="addMemo()">添加</button>
+                            </div>
+                            <div id="memo-list"></div>
+                        </div>
+                    </div>
+                    <div class="tab-content" id="timezone-tab">
+                        <div class="timezone-list" id="timezone-list"></div>
+                    </div>
+                    <div class="tab-content" id="time-tab">
+                        <div style="padding: 20px;">
+                            <h3>当前时间</h3>
+                            <div id="current-time" style="font-size: 24px; margin: 20px 0;"></div>
+                            <button onclick="syncSystemTime()">同步系统时间</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return win;
+        }
+
+        // 打开日历窗口
+        function openCalendarWindow() {
+            if (windows['calendar']) {
+                windows['calendar'].style.display = 'block';
+                windows['calendar'].style.zIndex = zIndex++;
+            } else {
+                windows['calendar'] = createCalendarWindow();
+                document.body.appendChild(windows['calendar']);
+                windows['calendar'].style.display = 'block';
+                initCalendar();
+                initTimezones();
+                updateCurrentTime();
+            }
+            activeWindow = windows['calendar'];
+        }
+
+        // 切换标签
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        // 初始化日历
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let memos = {};
+
+        function initCalendar() {
+            updateCalendarHeader();
+            updateCalendarGrid();
+        }
+
+        function updateCalendarHeader() {
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            document.getElementById('current-month').textContent = 
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+        }
+
+        function updateCalendarGrid() {
+            const grid = document.getElementById('calendar-grid');
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            
+            let html = ['日', '一', '二', '三', '四', '五', '六'].map(d => 
+                `<div class="calendar-day" style="font-weight: bold">${d}</div>`
+            ).join('');
+
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                html += '<div></div>';
+            }
+
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                const isToday = isSameDate(date, new Date());
+                const isSelected = isSameDate(date, selectedDate);
+                
+                html += `
+                    <div class="calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}"
+                         onclick="selectDate(${day})">${day}</div>
+                `;
+            }
+
+            grid.innerHTML = html;
+            updateMemoList();
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            initCalendar();
+        }
+
+        function selectDate(day) {
+            selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+            updateCalendarGrid();
+        }
+
+        function isSameDate(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        // 备忘录功能
+        function addMemo() {
+            const input = document.getElementById('memo-input');
+            const text = input.value.trim();
+            if (text) {
+                const dateKey = selectedDate.toISOString().split('T')[0];
+                if (!memos[dateKey]) {
+                    memos[dateKey] = [];
+                }
+                memos[dateKey].push(text);
+                input.value = '';
+                updateMemoList();
+            }
+        }
+
+        function updateMemoList() {
+            const dateKey = selectedDate.toISOString().split('T')[0];
+            const list = document.getElementById('memo-list');
+            const items = memos[dateKey] || [];
+            
+            list.innerHTML = items.map((memo, index) => `
+                <div class="memo-item">
+                    <span>${memo}</span>
+                    <button onclick="deleteMemo(${index})">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteMemo(index) {
+            const dateKey = selectedDate.toISOString().split('T')[0];
+            if (memos[dateKey]) {
+                memos[dateKey].splice(index, 1);
+                updateMemoList();
+            }
+        }
+
+        // 时区功能
+        function initTimezones() {
+            const timezones = [
+                'Asia/Shanghai',
+                'America/New_York',
+                'Europe/London',
+                'Asia/Tokyo',
+                'Australia/Sydney'
+            ];
+
+            const list = document.getElementById('timezone-list');
+            list.innerHTML = timezones.map(tz => `
+                <div class="timezone-item" onclick="selectTimezone('${tz}')">
+                    ${tz}
+                    <div>${new Date().toLocaleTimeString('zh-CN', {timeZone: tz})}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectTimezone(timezone) {
+            // 这里可以添加时区切换逻辑
+            console.log('Selected timezone:', timezone);
+        }
+
+        // 时间同步功能
+        function updateCurrentTime() {
+            const timeDiv = document.getElementById('current-time');
+            if (timeDiv) {
+                timeDiv.textContent = new Date().toLocaleTimeString('zh-CN');
+                setTimeout(updateCurrentTime, 1000);
+            }
+        }
+
+        function syncSystemTime() {
+            // 这里可以添加同步系统时间的逻辑
+            alert('已同步系统时间');
+        }
+
+        function initLoginWindowDrag() {
+            const loginWindow = document.querySelector('.login-window');
+            const loginHeader = document.querySelector('.login-window h2');
+
+            loginHeader.addEventListener('mousedown', (e) => {
+                loginWindowDragging = true;
+                loginWindowInitialX = e.clientX - loginWindowXOffset;
+                loginWindowInitialY = e.clientY - loginWindowYOffset;
+                loginHeader.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (loginWindowDragging) {
+                    e.preventDefault();
+                    const currentX = e.clientX - loginWindowInitialX;
+                    const currentY = e.clientY - loginWindowInitialY;
+                    loginWindowXOffset = currentX;
+                    loginWindowYOffset = currentY;
+                    loginWindow.style.transform = `translate(${currentX}px, ${currentY}px)`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                loginWindowDragging = false;
+                if (loginHeader) {
+                    loginHeader.style.cursor = 'grab';
+                }
+            });
+        }
+
+        function toggleStartMenu() {
+            const startMenu = document.getElementById('startMenu');
+            if (startMenu.style.display === 'block') {
+                startMenu.style.display = 'none';
+            } else {
+                startMenu.style.display = 'block';
+            }
+        }
+
+        // 点击其他地方关闭开始菜单
+        document.addEventListener('click', (e) => {
+            const startMenu = document.getElementById('startMenu');
+            const startButton = e.target.closest('.start-button');
+            if (!startButton && startMenu.style.display === 'block') {
+                startMenu.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 

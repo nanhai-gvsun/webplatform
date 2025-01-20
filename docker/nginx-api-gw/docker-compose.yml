@@ -17,9 +17,9 @@ services:
       - ./cache:/var/nginx/cache
       - ../../:/home/gvsun/webplatform
     networks:
-      - my-bridge-network
+      - 1panel-network
     restart: always
 
 networks:
-  my-bridge-network:
-    driver: bridge
+    1panel-network:
+        external: true

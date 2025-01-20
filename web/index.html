@@ -1,30 +1,67 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的网页</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-    </style>
+    <title>GVSUN Desktop</title>
+    <link rel="stylesheet" href="./css/desktop.css">
 </head>
 <body>
-    <div class="container">
-        <h1>欢迎访问我的网页</h1>
-        <p>这是一个简单的HTML页面示例。您可以根据需要修改和扩展它。</p>
+    <!-- 桌面区域 -->
+    <div id="desktop">
+        <!-- 桌面图标容器 -->
+        <div id="icons-container">
+            <!-- 图标将通过 JavaScript 从 desktop.json 动态加载 -->
+        </div>
+
+        <!-- 窗口容器 -->
+        <div id="windows-container">
+            <!-- 窗口模板 -->
+            <div id="window-template" class="window hidden" style="display: none;">
+                <div class="window-titlebar">
+                    <span class="window-title"></span>
+                    <div class="window-controls">
+                        <button class="minimize-btn">─</button>
+                        <button class="maximize-btn">□</button>
+                        <button class="close-btn">×</button>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <iframe></iframe>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- 任务栏 -->
+    <div id="taskbar">
+        <!-- 开始按钮 -->
+        <button id="start-button">GVSUN</button>
+        
+        <!-- 开始菜单 -->
+        <div id="start-menu" class="hidden">
+            <div class="menu-item" id="settings-button">设置</div>
+            <div class="menu-item" id="logout-button">退出</div>
+        </div>
+
+        <!-- 运行中的应用程序 -->
+        <div id="running-apps">
+            <!-- 任务栏按钮将通过 JavaScript 动态添加 -->
+        </div>
+
+        <!-- 时钟 -->
+        <div id="clock">
+            <!-- 时间将通过 JavaScript 动态更新 -->
+        </div>
+    </div>
+
+    <!-- 检查登录状态并初始化桌面系统 -->
+    <script>
+        // 检查登录状态
+        if (!sessionStorage.getItem('user')) {
+            window.location.href = './page/login/index.html';
+        }
+    </script>
+    <script src="./scripts/webui.js"></script>
 </body>
 </html> 

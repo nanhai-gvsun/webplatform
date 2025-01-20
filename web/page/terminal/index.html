@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终端</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        #terminal {
+            height: calc(100% - 40px);
+            overflow-y: auto;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .prompt {
+            color: #0f0;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #commandInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            padding: 0 5px;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+    <div class="input-line">
+        <span class="prompt">guest@localhost:~$</span>
+        <input type="text" id="commandInput" autofocus>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const commandInput = document.getElementById('commandInput');
+        const commands = {
+            help: () => `可用命令：
+  help     - 显示帮助信息
+  clear    - 清空终端
+  echo     - 显示文本
+  date     - 显示当前日期和时间
+  whoami   - 显示当前用户
+  ls       - 列出目录内容
+  pwd      - 显示当前工作目录`,
+            clear: () => {
+                terminal.innerHTML = '';
+                return '';
+            },
+            echo: (args) => args.join(' '),
+            date: () => new Date().toString(),
+            whoami: () => {
+                const user = JSON.parse(sessionStorage.getItem('user'));
+                return user ? user.username : 'guest';
+            },
+            ls: () => `Desktop  Documents  Downloads  Pictures`,
+            pwd: () => '/home/guest'
+        };
+
+        function addLine(text, isCommand = false) {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            if (isCommand) {
+                line.innerHTML = `<span class="prompt">guest@localhost:~$</span> ${text}`;
+            } else {
+                line.textContent = text;
+            }
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function executeCommand(input) {
+            const [cmd, ...args] = input.trim().split(' ');
+            const command = commands[cmd];
+            
+            if (command) {
+                const output = command(args);
+                if (output) addLine(output);
+            } else if (cmd) {
+                addLine(`命令未找到: ${cmd}`);
+            }
+        }
+
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const input = commandInput.value;
+                addLine(input, true);
+                executeCommand(input);
+                commandInput.value = '';
+            }
+        });
+
+        // 初始显示欢迎信息
+        addLine('欢迎使用终端！输入 help 获取帮助。');
+    </script>
+</body>
+</html> 

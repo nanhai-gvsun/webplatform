@@ -19,9 +19,9 @@ services:
       - ./srs.conf:/usr/local/srs/conf/srs.conf
       - ./init.sh:/home/gvsun/webplatform/docker/srshookweb/init.sh
     networks:
-      - my-bridge-network
-    restart: unless-stopped
+      - 1panel-network
+    restart: always
 
 networks:
-  my-bridge-network:
-    driver: bridge
+    1panel-network:
+        external: true

@@ -1,0 +1,23 @@
+{
+    "domains": [
+        {
+            "id": "local",
+            "name": "本地",
+            "description": "本地开发环境",
+            "authUrl": "./data/user.json"
+        },
+        {
+            "id": "test",
+            "name": "测试环境",
+            "description": "测试服务器（未实现）",
+            "authUrl": "http://10.106.0.222/api/auth"
+        },
+        {
+            "id": "prod",
+            "name": "生产环境",
+            "description": "生产服务器（未实现）",
+            "authUrl": "https://api.gvsun.net/auth"
+        }
+    ],
+    "default": "local"
+} 

@@ -1,0 +1,240 @@
+/* 基础样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+/* 桌面区域 */
+#desktop {
+    height: calc(100vh - 40px); /* 减去任务栏高度 */
+    background: #0078d7;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 桌面图标容器 */
+#icons-container {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 80px);
+    gap: 20px;
+    justify-content: start;
+}
+
+.desktop-icon {
+    width: 80px;
+    text-align: center;
+    cursor: pointer;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.desktop-icon img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 5px;
+}
+
+.desktop-icon span {
+    display: block;
+    font-size: 12px;
+    word-wrap: break-word;
+}
+
+/* 窗口样式 */
+#windows-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.window {
+    position: absolute;
+    min-width: 300px;
+    min-height: 200px;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+}
+
+.window.hidden {
+    display: none;
+}
+
+.window-titlebar {
+    height: 30px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+    cursor: move;
+    user-select: none;
+}
+
+.window-title {
+    flex-grow: 1;
+    margin-left: 8px;
+    font-size: 14px;
+}
+
+.window-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.window-controls button {
+    width: 45px;
+    height: 25px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px;
+}
+
+.window-controls button:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.close-btn:hover {
+    background: #e81123 !important;
+    color: white;
+}
+
+.window-content {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.window-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* 任务栏 */
+#taskbar {
+    height: 40px;
+    background: #202020;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    z-index: 1000;
+}
+
+#start-button {
+    width: 50px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#start-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 开始菜单 */
+#start-menu {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    background: #333;
+    width: 200px;
+    padding: 10px 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+#start-menu.hidden {
+    display: none;
+}
+
+.menu-item {
+    padding: 10px 20px;
+    color: white;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 运行中的应用 */
+#running-apps {
+    flex-grow: 1;
+    display: flex;
+    gap: 2px;
+    padding: 0 10px;
+}
+
+.taskbar-item {
+    height: 35px;
+    min-width: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    margin: 0 2px;
+}
+
+.taskbar-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-item.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 时钟 */
+#clock {
+    color: white;
+    padding: 0 15px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#clock:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 窗口拖动时的遮罩 */
+.drag-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: none;
+}
+
+/* 活动窗口样式 */
+.window.active {
+    z-index: 100;
+}
+
+.window.active .window-titlebar {
+    background: #0078d7;
+    color: white;
+} 

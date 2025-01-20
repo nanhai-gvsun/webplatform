@@ -1,0 +1,52 @@
+{
+    "icons": [
+        {
+            "id": "code",
+            "title": "代码编辑器",
+            "icon": "https://cdn-icons-png.flaticon.com/512/1088/1088537.png",
+            "url": "/code/"
+        },
+        {
+            "id": "terminal",
+            "title": "终端",
+            "icon": "https://cdn-icons-png.flaticon.com/512/2535/2535557.png",
+            "url": "/page/terminal.html"
+        },
+        {
+            "id": "browser",
+            "title": "浏览器",
+            "icon": "https://cdn-icons-png.flaticon.com/512/2965/2965300.png",
+            "url": "/page/browser.html"
+        },
+        {
+            "id": "linux-panel",
+            "title": "Linux面板",
+            "icon": "https://cdn-icons-png.flaticon.com/512/6124/6124995.png",
+            "url": "https://10.106.0.222/manager"
+        },
+        {
+            "id": "docs",
+            "title": "文档",
+            "url": "http://10.106.0.222:4999/",
+            "icon": "https://cdn-icons-png.flaticon.com/512/2965/2965335.png"
+        },
+        {
+            "id": "manual",
+            "title": "运维手册",
+            "icon": "https://cdn-icons-png.flaticon.com/512/2991/2991106.png",
+            "url": "http://10.106.0.222:4999/web/#/603411482/125971236"
+        },
+        {
+            "id": "lubanlou",
+            "title": "鲁班楼",
+            "icon": "https://cdn-icons-png.flaticon.com/512/8002/8002163.png",
+            "url": "https://www.lubanlou.com"
+        },
+        {
+            "id": "settings",
+            "title": "设置",
+            "url": "/page/settings.html",
+            "icon": "https://cdn-icons-png.flaticon.com/512/3524/3524659.png"
+        }
+    ]
+}
